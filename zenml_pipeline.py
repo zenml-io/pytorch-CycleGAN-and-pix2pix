@@ -278,6 +278,6 @@ def cyclegan_pipeline(download_data_step, train_step):
 
 p = cyclegan_pipeline(
     download_data_step=downloader(DownloaderConfig(name='maps')),
-    train_step=train_cycle_gan(opt=TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)).with_materializer(CycleGanMaterializer),
+    train_step=train_cycle_gan(opt=TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)).with_return_materializers(CycleGanMaterializer),
 )
 p.run()
