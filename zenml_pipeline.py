@@ -91,7 +91,7 @@ def downloader(config: DownloaderConfig) -> str:
 
 
 class BaseConfig(BaseStepConfig):
-    name: str = "experiment_name"
+    name: str = "maps_cyclegan"
     use_wandb: bool = False
     gpu_ids: List[int] = []
     checkpoints_dir: str = './checkpoints'
@@ -110,7 +110,7 @@ class BaseConfig(BaseStepConfig):
     dataset_mode: str = "unaligned"
     direction: str = "AtoB"
     serial_batches: bool = True
-    num_threads: int = 1
+    num_threads: int = 0
     batch_size: int = 1
     load_size: int = 286
     crop_size: int = 256
@@ -278,6 +278,6 @@ def cyclegan_pipeline(download_data_step, train_step):
 
 p = cyclegan_pipeline(
     download_data_step=downloader(DownloaderConfig(name='maps')),
-    train_step=train_cycle_gan(),
+    train_step=train_cycle_gan(opt=TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)),
 )
 p.run()
