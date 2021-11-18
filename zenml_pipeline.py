@@ -279,4 +279,4 @@ p = cyclegan_pipeline(
     download_data_step=downloader(DownloaderConfig(name='maps')),
     train_step=train_cycle_gan(),
 )
-# p.run()
+p.run()
