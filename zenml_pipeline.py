@@ -29,6 +29,7 @@ from zenml.steps.base_step_config import BaseStepConfig
 from data import create_dataset
 from models import create_model
 from options.base_options import BaseOptions
+from util import util
 from util.visualizer import Visualizer
 
 logger = get_logger(__name__)
@@ -157,6 +158,26 @@ class TrainerConfig(BaseTrainerConfig):
     lambda_B: float = 10.0
     lambda_identity: float = 0.5
 
+    def print_options(self):
+        """Print and save options
+
+        It will print current options .
+        It will save options into a text file / [checkpoints_dir] / opt.txt
+        """
+        message = '----------------- Options ---------------\n'
+        for k, v in sorted(self.dict().items()):
+            message += '{}\n'.format(str(k), str(v))
+        message += '----------------- End -------------------'
+        print(message)
+
+        # save to the disk
+        expr_dir = os.path.join(self.checkpoints_dir, self.name)
+        util.mkdirs(expr_dir)
+        file_name = os.path.join(expr_dir, '{}_opt.txt'.format(self.phase))
+        with open(file_name, 'wt') as opt_file:
+            opt_file.write(message)
+            opt_file.write('\n')
+
 
 @step
 def train_cycle_gan(
@@ -169,7 +190,7 @@ def train_cycle_gan(
     opt.dataroot = path  # need to do this to get the rest of the code to work
     if opt.gpu_ids:
         torch.cuda.set_device(opt.gpu_ids[0])
-    BaseOptions().print_options(opt)
+    opt.print_options()
 
     dataset = create_dataset(opt)
     dataset_size = len(dataset)  # get the number of images in the dataset.
@@ -258,4 +279,4 @@ p = cyclegan_pipeline(
     download_data_step=downloader(DownloaderConfig(name='maps')),
     train_step=train_cycle_gan(),
 )
-p.run()
+# p.run()
