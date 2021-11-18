@@ -123,6 +123,7 @@ class BaseConfig(BaseStepConfig):
 
 
 class TrainerConfig(BaseConfig):
+    dataroot: str = ""
     display_freq: int = 400
     display_ncols: int = 4
     display_id: int = 1
