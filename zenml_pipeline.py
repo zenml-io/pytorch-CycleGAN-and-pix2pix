@@ -28,6 +28,7 @@ from zenml.steps.base_step_config import BaseStepConfig
 
 from data import create_dataset
 from models import create_model
+from options.base_options import BaseOptions
 from util.visualizer import Visualizer
 
 logger = get_logger(__name__)
@@ -168,6 +169,7 @@ def train_cycle_gan(
     opt.dataroot = path  # need to do this to get the rest of the code to work
     if opt.gpu_ids:
         torch.cuda.set_device(opt.gpu_ids[0])
+    BaseOptions().print_options(opt)
 
     dataset = create_dataset(opt)
     dataset_size = len(dataset)  # get the number of images in the dataset.
