@@ -92,7 +92,7 @@ def downloader(config: DownloaderConfig) -> str:
 
 class BaseConfig(BaseStepConfig):
     name: str = "experiment_name"
-    use_wandb: bool = True
+    use_wandb: bool = False
     gpu_ids: List[int] = []
     checkpoints_dir: str = './checkpoints'
     model: str = 'cycle_gan'
@@ -140,7 +140,7 @@ class BaseTrainerConfig(BaseConfig):
     save_latest_freq: int = 5000
     save_epoch_freq: int = 5
     save_by_iter: bool = True
-    continue_train: bool = True
+    continue_train: bool = False
     epoch_count: int = 1
     phase: str = "train"
     n_epochs: int = 100
@@ -203,7 +203,7 @@ def train_cycle_gan(
     model.setup(opt)
 
     # create a visualizer that display/save images and plots
-    visualizer = Visualizer(opt)
+    # visualizer = Visualizer(opt)
 
     total_iters = 0  # the total number of training iterations
 
@@ -214,7 +214,7 @@ def train_cycle_gan(
         iter_data_time = time.time()  # timer for data loading per iteration
         epoch_iter = 0  # the number of training iterations in current epoch,
         # reset to 0 every epoch
-        visualizer.reset()  # reset the visualizer: make sure it saves the
+        # visualizer.reset()  # reset the visualizer: make sure it saves the
         # results to HTML at least once every epoch
         model.update_learning_rate()  # update learning rates in the
         # beginning of every epoch.
@@ -234,18 +234,19 @@ def train_cycle_gan(
                 # visdom and save images to a HTML file
                 save_result = total_iters % opt.update_html_freq == 0
                 model.compute_visuals()
-                visualizer.display_current_results(model.get_current_visuals(),
-                                                   epoch, save_result)
+                # visualizer.display_current_results(model.get_current_visuals(),
+                #                                    epoch, save_result)
 
             if total_iters % opt.print_freq == 0:  # print training losses
                 # and save logging information to the disk
                 losses = model.get_current_losses()
                 t_comp = (time.time() - iter_start_time) / opt.batch_size
-                visualizer.print_current_losses(epoch, epoch_iter, losses,
-                                                t_comp, t_data)
+                # visualizer.print_current_losses(epoch, epoch_iter, losses,
+                #                                 t_comp, t_data)
                 if opt.display_id > 0:
-                    visualizer.plot_current_losses(epoch, float(
-                        epoch_iter) / dataset_size, losses)
+                    pass
+                    # visualizer.plot_current_losses(epoch, float(
+                    #     epoch_iter) / dataset_size, losses)
 
             if total_iters % opt.save_latest_freq == 0:  # cache our latest
                 # model every <save_latest_freq> iterations
