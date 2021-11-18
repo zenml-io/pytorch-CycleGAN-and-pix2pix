@@ -88,7 +88,6 @@ def downloader(config: DownloaderConfig) -> str:
 
 
 class BaseConfig(BaseStepConfig):
-    dataroot: str = ""
     name: str = "experiment_name"
     use_wandb: bool = True
     gpu_ids: str = '-1'
@@ -155,6 +154,7 @@ def train_cycle_gan(
         path: str,
 ) -> torch.nn.Module:
     # create a dataset given opt.dataset_mode and other options
+    opt.dataroot = path  # need to do this to get the rest of the code to work
     dataset = create_dataset(opt)
     dataset_size = len(dataset)  # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
