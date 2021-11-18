@@ -117,7 +117,7 @@ class BaseConfig(BaseStepConfig):
     no_flip: bool = True
     display_winsize: int = 256
     epoch: str = "latest"
-    load_iter: str = "0"
+    load_iter: int = 0
     verbose: bool = True
     suffix: str = ""
 
