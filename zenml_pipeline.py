@@ -110,7 +110,7 @@ class BaseConfig(BaseStepConfig):
     dataset_mode: str = "unaligned"
     direction: str = "AtoB"
     serial_batches: bool = True
-    num_threads: int = 4
+    num_threads: int = 1
     batch_size: int = 1
     load_size: int = 286
     crop_size: int = 256
