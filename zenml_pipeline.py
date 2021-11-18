@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 #  or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
-
+import os
 import sys
 import time
 from pathlib import Path
@@ -55,7 +55,7 @@ def download_extract_zipfile(url, save_path):
     """Download and extract a zipfile"""
     # Download the file from the URL
     # Create a new file on the hard drive
-    tempzip = NamedTemporaryFile()
+    tempzip = NamedTemporaryFile(delete=False)
 
     download_file(url, tempzip.name)
 
@@ -68,6 +68,7 @@ def download_extract_zipfile(url, save_path):
     zf.close()
     # Close the zup file
     tempzip.close()
+    os.unlink(tempzip.name)
 
 
 class DownloaderConfig(BaseStepConfig):
