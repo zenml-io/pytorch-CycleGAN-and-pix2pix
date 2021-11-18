@@ -25,7 +25,7 @@ from zenml.logger import get_logger
 from zenml.pipelines import pipeline
 from zenml.steps import step
 from zenml.steps.base_step_config import BaseStepConfig
-
+from cycle_gan_materializer import CycleGanMaterializer
 from data import create_dataset
 from models import create_model
 from options.base_options import BaseOptions
@@ -278,6 +278,6 @@ def cyclegan_pipeline(download_data_step, train_step):
 
 p = cyclegan_pipeline(
     download_data_step=downloader(DownloaderConfig(name='maps')),
-    train_step=train_cycle_gan(opt=TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)),
+    train_step=train_cycle_gan(opt=TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)).with_materializer(CycleGanMaterializer),
 )
 p.run()
