@@ -21,13 +21,12 @@ from zipfile import ZipFile
 import requests
 import torch
 from zenml.logger import get_logger
-from zenml.steps import step
 from zenml.pipelines import pipeline
+from zenml.steps import step
 from zenml.steps.base_step_config import BaseStepConfig
 
 from data import create_dataset
 from models import create_model
-from options.train_options import TrainOptions
 from util.visualizer import Visualizer
 
 logger = get_logger(__name__)
@@ -81,38 +80,90 @@ def download_maps() -> str:
     return str(download_path.absolute() / 'maps')
 
 
-class TrainerConfig(BaseStepConfig):
-    name: str = "maps_cyclegan"
-    model: str = "cycle_gan"
+class BaseConfig(BaseStepConfig):
+    dataroot: str = ""
+    name: str = "experiment_name"
+    use_wandb: bool = True
+    gpu_ids: str = '-1'
+    checkpoints_dir: str = './checkpoints'
+    model: str = 'cycle_gan'
+    input_nc: int = 3
+    output_nc: int = 3
+    ngf: int = 64
+    ndf: int = 64
+    netD: str = 'basic'
+    netG: str = 'resnet_9blocks'
+    n_layers_D: int = 3
+    norm: str = "instance"
+    init_type: str = "normal"
+    init_gain: float = 0.02
+    no_dropout: bool = True
+    dataset_mode: str = "unaligned"
+    direction: str = "AtoB"
+    serial_batches: bool = True
+    num_threads: int = 4
+    batch_size: int = 1
+    load_size: int = 286
+    crop_size: int = 256
+    max_dataset_size: float = float("inf")
+    preprocess: str = "resize_and_crop"
+    no_flip: bool = True
+    display_winsize: int = 256
+    epoch: str = "latest"
+    load_iter: str = "0"
+    verbose: bool = True
+    suffix: str = ""
+
+
+class TrainerConfig(BaseConfig):
+    display_freq: int = 400
+    display_ncols: int = 4
+    display_id: int = 1
+    display_server: str = "http://localhost"
+    display_env: str = "main"
+
+    display_port: int = 8097
+    update_html_freq: int = 1000
+    print_freq: int = 100
+    no_html: bool = True
+    save_latest_freq: int = 5000
+    save_epoch_freq: int = 5
+    save_by_iter: bool = True
+    continue_train: bool = True
+    epoch_count: int = 1
+    phase: str = "train"
+    n_epochs: int = 100
+    n_epochs_decay: int = 100
+    beta1: float = 0.5
+    lr: float = 0.0002
+    gan_mode: str = "lsgan"
+    pool_size: int = 50
+    lr_policy: str = "linear"
+    lr_decay_iters: int = 50
 
 
 @step
 def train_cycle_gan(
-        config: TrainerConfig,
+        opt: TrainerConfig,
         path: str,
 ) -> torch.nn.Module:
-    opt = TrainOptions().parse()  # get training options
-
-    # replace the command line defaults for now
-    opt.name = config.name
-    opt.model = config.model
-    opt.dataroot = path
-
-    dataset = create_dataset(
-        opt)  # create a dataset given opt.dataset_mode and other options
+    # create a dataset given opt.dataset_mode and other options
+    dataset = create_dataset(opt)
     dataset_size = len(dataset)  # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
 
-    model = create_model(
-        opt)  # create a model given opt.model and other options
-    model.setup(
-        opt)  # regular setup: load and print networks; create schedulers
-    visualizer = Visualizer(
-        opt)  # create a visualizer that display/save images and plots
+    # create a model given opt.model and other options
+    model = create_model(opt)
+
+    # regular setup: load and print networks; create schedulers
+    model.setup(opt)
+
+    # create a visualizer that display/save images and plots
+    visualizer = Visualizer(opt)
+
     total_iters = 0  # the total number of training iterations
 
-    for epoch in range(opt.epoch_count,
-                       opt.n_epochs + opt.n_epochs_decay + 1):  # outer loop
+    for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
         # for different epochs; we save the model by <epoch_count>,
         # <epoch_count>+<save_latest_freq>
         epoch_start_time = time.time()  # timer for entire epoch
