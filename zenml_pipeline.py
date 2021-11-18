@@ -13,6 +13,7 @@
 #  permissions and limitations under the License.
 import os
 import sys
+from typing import List
 import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -91,7 +92,7 @@ def downloader(config: DownloaderConfig) -> str:
 class BaseConfig(BaseStepConfig):
     name: str = "experiment_name"
     use_wandb: bool = True
-    gpu_ids: str = '-1'
+    gpu_ids: List[int] = []
     checkpoints_dir: str = './checkpoints'
     model: str = 'cycle_gan'
     input_nc: int = 3
@@ -157,7 +158,12 @@ def train_cycle_gan(
         path: str,
 ) -> torch.nn.Module:
     # create a dataset given opt.dataset_mode and other options
+
+    # zenml additions
     opt.dataroot = path  # need to do this to get the rest of the code to work
+    if opt.gpu_ids:
+        torch.cuda.set_device(opt.gpu_ids[0])
+
     dataset = create_dataset(opt)
     dataset_size = len(dataset)  # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
