@@ -70,14 +70,21 @@ def download_extract_zipfile(url, save_path):
     tempzip.close()
 
 
+class DownloaderConfig(BaseStepConfig):
+    name: str
+    path: str = "./datasets"
+
+
 @step
-def download_maps() -> str:
+def downloader(config: DownloaderConfig) -> str:
     """Download the MOT20 dataset."""
-    url = "http://efrosgans.eecs.berkeley.edu/cyclegan/datasets/maps.zip"
-    download_path = Path("./datasets")
+    url = f"http://efrosgans.eecs.berkeley.edu/cyclegan/datasets/" \
+          f"{config.name}.zip"
+    download_path = Path(config.path)
     download_path.mkdir(parents=True, exist_ok=True)
     download_extract_zipfile(url=url, save_path=download_path)
-    return str(download_path.absolute() / 'maps')
+    return str(download_path.absolute() / config.name)
+
 
 
 class BaseConfig(BaseStepConfig):
@@ -232,7 +239,7 @@ def cyclegan_pipeline(download_data_step, train_step):
 
 
 p = cyclegan_pipeline(
-    download_data_step=download_maps(),
+    download_data_step=downloader(DownloaderConfig(name='maps')),
     train_step=train_cycle_gan(),
 )
 p.run()
