@@ -13,10 +13,10 @@
 #  permissions and limitations under the License.
 import os
 import sys
-from typing import List
 import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import List
 from zipfile import ZipFile
 
 import requests
@@ -88,7 +88,6 @@ def downloader(config: DownloaderConfig) -> str:
     return str(download_path.absolute() / config.name)
 
 
-
 class BaseConfig(BaseStepConfig):
     name: str = "experiment_name"
     use_wandb: bool = True
@@ -123,7 +122,7 @@ class BaseConfig(BaseStepConfig):
     suffix: str = ""
 
 
-class TrainerConfig(BaseConfig):
+class BaseTrainerConfig(BaseConfig):
     dataroot: str = ""
     isTrain: bool = True
     display_freq: int = 400
@@ -150,6 +149,12 @@ class TrainerConfig(BaseConfig):
     pool_size: int = 50
     lr_policy: str = "linear"
     lr_decay_iters: int = 50
+
+
+class TrainerConfig(BaseTrainerConfig):
+    lambda_A: float = 10.0
+    lambda_B: float = 10.0
+    lambda_identity: float = 0.5
 
 
 @step
