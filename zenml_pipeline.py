@@ -25,12 +25,12 @@ from zenml.logger import get_logger
 from zenml.pipelines import pipeline
 from zenml.steps import step
 from zenml.steps.base_step_config import BaseStepConfig
+from zenml.steps.step_context import StepContext
+
 from cycle_gan_materializer import CycleGanMaterializer
 from data import create_dataset
 from models import create_model
-from options.base_options import BaseOptions
 from util import util
-from util.visualizer import Visualizer
 
 logger = get_logger(__name__)
 
@@ -82,7 +82,7 @@ class DownloaderConfig(BaseStepConfig):
 @step
 def downloader(config: DownloaderConfig) -> str:
     """Download the MOT20 dataset."""
-    url = f"http://efrosgans.eecs.berkeley.edu/cyclegan/datasets/" \
+    url = f"http://efrosgans.eecs.berkeley.edu/cyclegan/datasets/" f"" \
           f"{config.name}.zip"
     download_path = Path(config.path)
     download_path.mkdir(parents=True, exist_ok=True)
@@ -94,14 +94,14 @@ class BaseConfig(BaseStepConfig):
     name: str = "maps_cyclegan"
     use_wandb: bool = False
     gpu_ids: List[int] = []
-    checkpoints_dir: str = './checkpoints'
-    model: str = 'cycle_gan'
+    checkpoints_dir: str = "./checkpoints"
+    model: str = "cycle_gan"
     input_nc: int = 3
     output_nc: int = 3
     ngf: int = 64
     ndf: int = 64
-    netD: str = 'basic'
-    netG: str = 'resnet_9blocks'
+    netD: str = "basic"
+    netG: str = "resnet_9blocks"
     n_layers_D: int = 3
     norm: str = "instance"
     init_type: str = "normal"
@@ -164,46 +164,67 @@ class TrainerConfig(BaseTrainerConfig):
         It will print current options .
         It will save options into a text file / [checkpoints_dir] / opt.txt
         """
-        message = '----------------- Options ---------------\n'
+        message = "----------------- Options ---------------\n"
         for k, v in sorted(self.dict().items()):
-            message += '{}\n'.format(str(k), str(v))
-        message += '----------------- End -------------------'
+            message += "{}\n".format(str(k), str(v))
+        message += "----------------- End -------------------"
         print(message)
 
         # save to the disk
         expr_dir = os.path.join(self.checkpoints_dir, self.name)
         util.mkdirs(expr_dir)
-        file_name = os.path.join(expr_dir, '{}_opt.txt'.format(self.phase))
-        with open(file_name, 'wt') as opt_file:
+        file_name = os.path.join(expr_dir, "{}_opt.txt".format(self.phase))
+        with open(file_name, "wt") as opt_file:
             opt_file.write(message)
-            opt_file.write('\n')
+            opt_file.write("\n")
 
 
-@step
-def train_cycle_gan(
-        opt: TrainerConfig,
-        path: str,
-) -> torch.nn.Module:
+from data.base_dataset import BaseDataset
+from models.base_model import BaseModel
+
+
+def prestep(opt: TrainerConfig):
     # create a dataset given opt.dataset_mode and other options
+    opt.checkpoints_dir = context.get_output_artifact_uri()
 
     # zenml additions
     opt.dataroot = path  # need to do this to get the rest of the code to work
     if opt.gpu_ids:
         torch.cuda.set_device(opt.gpu_ids[0])
     opt.print_options()
+    return opt
 
+
+@step
+def generate_dataset(opt: TrainerConfig) -> BaseDataset:
+    """Generates a dataset"""
+    opt = prestep(opt)
     dataset = create_dataset(opt)
     dataset_size = len(dataset)  # get the number of images in the dataset.
-    print('The number of training images = %d' % dataset_size)
+    print("The number of training images = %d" % dataset_size)
+    return dataset
 
+
+@step
+def generate_model(opt: TrainerConfig) -> BaseModel:
+    """Generates a model"""
     # create a model given opt.model and other options
+    opt = prestep(opt)
     model = create_model(opt)
+    return model
+
+
+@step
+def train_cycle_gan(
+        context: StepContext,
+        model: BaseModel,
+        dataset: BaseDataset,
+        opt: TrainerConfig,
+) -> BaseModel:
+    opt = prestep(opt)
 
     # regular setup: load and print networks; create schedulers
     model.setup(opt)
-
-    # create a visualizer that display/save images and plots
-    # visualizer = Visualizer(opt)
 
     total_iters = 0  # the total number of training iterations
 
@@ -234,15 +255,14 @@ def train_cycle_gan(
                 # visdom and save images to a HTML file
                 save_result = total_iters % opt.update_html_freq == 0
                 model.compute_visuals()
-                # visualizer.display_current_results(model.get_current_visuals(),
+                # visualizer.display_current_results(
+                # model.get_current_visuals(),
                 #                                    epoch, save_result)
 
             if total_iters % opt.print_freq == 0:  # print training losses
                 # and save logging information to the disk
                 losses = model.get_current_losses()
                 t_comp = (time.time() - iter_start_time) / opt.batch_size
-                # visualizer.print_current_losses(epoch, epoch_iter, losses,
-                #                                 t_comp, t_data)
                 if opt.display_id > 0:
                     pass
                     # visualizer.plot_current_losses(epoch, float(
@@ -250,34 +270,58 @@ def train_cycle_gan(
 
             if total_iters % opt.save_latest_freq == 0:  # cache our latest
                 # model every <save_latest_freq> iterations
-                print('saving the latest model (epoch %d, total_iters %d)' % (
-                    epoch, total_iters))
-                save_suffix = 'iter_%d' % total_iters if opt.save_by_iter \
-                    else 'latest'
+                print(
+                    "saving the latest model (epoch %d, total_iters %d)"
+                    % (epoch, total_iters)
+                )
+                save_suffix = "iter_%d" % total_iters if opt.save_by_iter \
+                    else "latest"
                 model.save_networks(save_suffix)
 
             iter_data_time = time.time()
         if epoch % opt.save_epoch_freq == 0:  # cache our model every
             # <save_epoch_freq> epochs
-            print('saving the model at the end of epoch %d, iters %d' % (
-                epoch, total_iters))
-            model.save_networks('latest')
+            print(
+                "saving the model at the end of epoch %d, iters %d"
+                % (epoch, total_iters)
+            )
+            model.save_networks("latest")
             model.save_networks(epoch)
 
-        print('End of epoch %d / %d \t Time Taken: %d sec' % (
-            epoch, opt.n_epochs + opt.n_epochs_decay,
-            time.time() - epoch_start_time))
+        print(
+            "End of epoch %d / %d \t Time Taken: %d sec"
+            % (epoch, opt.n_epochs + opt.n_epochs_decay,
+               time.time() - epoch_start_time)
+        )
     return model
 
 
 @pipeline(enable_cache=True)
-def cyclegan_pipeline(download_data_step, train_step):
+def cyclegan_pipeline(
+        download_data_step,
+        generate_dataset_step,
+        generate_model_step,
+        train_step
+):
     path = download_data_step()
-    train_step(path=path)
+    dataset = generate_dataset_step()
+    model = generate_model_step()
+    train_step(path=path, model=model, dataset=dataset)
 
 
-p = cyclegan_pipeline(
-    download_data_step=downloader(DownloaderConfig(name='maps')),
-    train_step=train_cycle_gan(opt=TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)).with_materializer(CycleGanMaterializer),
-)
-p.run()
+if __name__ == "__main__":
+    step_opt = TrainerConfig(gpu_ids=[], n_epochs=1, n_epochs_decay=0)
+
+    p = cyclegan_pipeline(
+        download_data_step=downloader(DownloaderConfig(name="maps")),
+        generate_model_step=generate_model(
+            opt=step_opt
+        ).with_return_materializers(CycleGanMaterializer),
+        generate_dataset_step=generate_dataset(
+            opt=step_opt
+        ).with_return_materializers(CycleGanMaterializer),
+        train_step=train_cycle_gan(
+            opt=step_opt
+        ).with_return_materializers(CycleGanMaterializer),
+    )
+    p.run()

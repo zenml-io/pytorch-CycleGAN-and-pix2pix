@@ -18,7 +18,6 @@ from typing import Any, Type, Union
 import torch
 from torch.nn import Module  # type: ignore[attr-defined]
 from zenml.materializers.base_materializer import BaseMaterializer
-from zenml.types.pytorch_types import TorchDict
 
 DEFAULT_FILENAME = "entire_model.pt"
 
@@ -26,9 +25,9 @@ DEFAULT_FILENAME = "entire_model.pt"
 class CycleGanMaterializer(BaseMaterializer):
     """Materializer to read/write Pytorch models."""
 
-    ASSOCIATED_TYPES = [Module, TorchDict]
+    ASSOCIATED_TYPES = [Module]
 
-    def handle_input(self, data_type: Type[Any]) -> Union[Module, TorchDict]:
+    def handle_input(self, data_type: Type[Any]) -> Module:
         """Reads and returns a PyTorch model.
 
         Returns:
@@ -37,22 +36,11 @@ class CycleGanMaterializer(BaseMaterializer):
         super().handle_input(data_type)
         raise NotImplementedError
 
-    def handle_return(self, model: Union[Module, TorchDict]) -> None:
+    def handle_return(self, model: Module) -> None:
         """Writes a PyTorch model.
 
         Args:
             model: A torch.nn.Module or a dict to pass into model.save
         """
         super().handle_return(model)
-        for name in model.model_names:
-            if isinstance(name, str):
-                save_filename = 'final_net_%s.pth' % name
-                save_path = os.path.join(self.artifact.uri, self.save_dir,
-                                         save_filename)
-                net = getattr(self, 'net' + name)
-
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
-                    net.cuda(self.gpu_ids[0])
-                else:
-                    torch.save(net.cpu().state_dict(), save_path)
+        pass
