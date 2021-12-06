@@ -12,10 +12,8 @@
 #  or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
 
-import os
-from typing import Any, Type, Union
+from typing import Any, Type
 
-import torch
 from torch.nn import Module  # type: ignore[attr-defined]
 from zenml.materializers.base_materializer import BaseMaterializer
 
