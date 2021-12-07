@@ -16,13 +16,13 @@ from zenml.steps import step
 
 from data import BaseDataset, create_dataset
 from zenml_src.configs.trainer_config import TrainerConfig
-from zenml_src.zenml_pipeline import prestep
 
 
-@step
-def generate_dataset(opt: TrainerConfig) -> BaseDataset:
+@step(enable_cache=False)
+def generate_dataset(opt: TrainerConfig, dataset_path: str) -> BaseDataset:
     """Generates a dataset"""
-    opt = prestep(opt)
+    # need to do this to get the rest of the code to work
+    opt.dataroot = dataset_path
     dataset = create_dataset(opt)
     dataset_size = len(dataset)  # get the number of images in the dataset.
     print("The number of training images = %d" % dataset_size)

@@ -14,25 +14,28 @@
 
 import time
 
+import torch
 from zenml.steps import step
 from zenml.steps.step_context import StepContext
 
 from data import BaseDataset
 from models import BaseModel
+from models import create_model
 from zenml_src.configs.trainer_config import TrainerConfig
-from zenml_src.zenml_pipeline import prestep
 
 
 @step
 def train_cycle_gan(
         context: StepContext,
-        model: BaseModel,
         dataset: BaseDataset,
         opt: TrainerConfig,
 ) -> BaseModel:
-    opt = prestep(opt)
-
+    opt.checkpoints_dir = context.get_output_artifact_uri()
+    if opt.gpu_ids:
+        torch.cuda.set_device(opt.gpu_ids[0])
+    opt.print_options()
     # regular setup: load and print networks; create schedulers
+    model = create_model(opt)
     model.setup(opt)
 
     total_iters = 0  # the total number of training iterations

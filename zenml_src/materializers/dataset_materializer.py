@@ -12,33 +12,45 @@
 #  or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
 
+import os
 from typing import Any, Type
 
 from torch.nn import Module  # type: ignore[attr-defined]
+from zenml.io import fileio
 from zenml.materializers.base_materializer import BaseMaterializer
 
-DEFAULT_FILENAME = "entire_model.pt"
+from data import BaseDataset, create_dataset
+from zenml_src.configs.trainer_config import TrainerConfig
+
+DATASET_OPT_DUMP = "dataset_opt_dump.json"
 
 
-class CycleGanMaterializer(BaseMaterializer):
+class DatasetMaterializer(BaseMaterializer):
     """Materializer to read/write Pytorch models."""
 
-    ASSOCIATED_TYPES = [Module]
+    ASSOCIATED_TYPES = [BaseDataset]
 
-    def handle_input(self, data_type: Type[Any]) -> Module:
+    def handle_input(self, data_type: Type[Any]) -> BaseDataset:
         """Reads and returns a PyTorch model.
 
         Returns:
             A loaded pytorch model.
         """
+        opt = TrainerConfig.parse_file(
+            os.path.join(self.artifact.uri, DATASET_OPT_DUMP)
+        )
+        dataset = create_dataset(opt)
         super().handle_input(data_type)
-        raise NotImplementedError
+        return dataset
 
-    def handle_return(self, model: Module) -> None:
+    def handle_return(self, dataset: BaseDataset) -> None:
         """Writes a PyTorch model.
 
         Args:
-            model: A torch.nn.Module or a dict to pass into model.save
+            dataset: A BaseDataset instance.
         """
-        super().handle_return(model)
-        pass
+        fileio.write_file_contents_as_string(
+            os.path.join(self.artifact.uri, DATASET_OPT_DUMP),
+            dataset.opt.json()
+        )
+        super().handle_return(dataset)

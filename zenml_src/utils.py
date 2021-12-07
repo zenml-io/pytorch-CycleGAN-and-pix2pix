@@ -18,8 +18,9 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZipFile
 
 import requests
+from zenml.logger import get_logger
 
-from zenml_src.zenml_pipeline import logger
+logger = get_logger(__name__)
 
 
 def download_file(url: str, out_file_name: str):

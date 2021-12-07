@@ -12,17 +12,20 @@
 #  or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
 
+from pathlib import Path
+
 from zenml.steps import step
 
-from models import BaseModel, create_model
-from zenml_src.configs.trainer_config import TrainerConfig
-from zenml_src.zenml_pipeline import prestep
+from zenml_src.configs.downloader_config import DownloaderConfig
+from zenml_src.utils import download_extract_zipfile
 
 
 @step
-def generate_model(opt: TrainerConfig) -> BaseModel:
-    """Generates a model"""
-    # create a model given opt.model and other options
-    opt = prestep(opt)
-    model = create_model(opt)
-    return model
+def download_raw_data(opt: DownloaderConfig) -> str:
+    """Download the MOT20 dataset."""
+    url = f"http://efrosgans.eecs.berkeley.edu/cyclegan/datasets/" f"" \
+          f"{opt.name}.zip"
+    download_path = Path(opt.path)
+    download_path.mkdir(parents=True, exist_ok=True)
+    download_extract_zipfile(url=url, save_path=download_path)
+    return str(download_path.absolute() / opt.name)
