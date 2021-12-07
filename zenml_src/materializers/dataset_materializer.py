@@ -15,7 +15,6 @@
 import os
 from typing import Any, Type
 
-from torch.nn import Module  # type: ignore[attr-defined]
 from zenml.io import fileio
 from zenml.materializers.base_materializer import BaseMaterializer
 
@@ -31,26 +30,26 @@ class DatasetMaterializer(BaseMaterializer):
     ASSOCIATED_TYPES = [BaseDataset]
 
     def handle_input(self, data_type: Type[Any]) -> BaseDataset:
-        """Reads and returns a PyTorch model.
+        """Reads and returns a BaseDataset.
 
         Returns:
-            A loaded pytorch model.
+            A loaded BaseDataset.
         """
+        super().handle_input(data_type)
         opt = TrainerConfig.parse_file(
             os.path.join(self.artifact.uri, DATASET_OPT_DUMP)
         )
         dataset = create_dataset(opt)
-        super().handle_input(data_type)
         return dataset
 
     def handle_return(self, dataset: BaseDataset) -> None:
-        """Writes a PyTorch model.
+        """Writes a BaseDataset to disk.
 
         Args:
             dataset: A BaseDataset instance.
         """
+        super().handle_return(dataset)
         fileio.write_file_contents_as_string(
             os.path.join(self.artifact.uri, DATASET_OPT_DUMP),
             dataset.opt.json()
         )
-        super().handle_return(dataset)

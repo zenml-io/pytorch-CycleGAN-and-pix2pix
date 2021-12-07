@@ -12,12 +12,17 @@
 #  or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
 
+import os
 from typing import Any, Type
 
+from zenml.io import fileio
 from zenml.materializers.base_materializer import BaseMaterializer
-from models.base_model import BaseModel
 
-DEFAULT_FILENAME = "entire_model.pt"
+from models import create_model
+from models.base_model import BaseModel
+from zenml_src.configs.trainer_config import TrainerConfig
+
+MODEL_OPT_DUMP = "model_opt_dump.json"
 
 
 class ModelMaterializer(BaseMaterializer):
@@ -26,19 +31,28 @@ class ModelMaterializer(BaseMaterializer):
     ASSOCIATED_TYPES = [BaseModel]
 
     def handle_input(self, data_type: Type[Any]) -> BaseModel:
-        """Reads and returns a PyTorch model.
+        """Reads and returns a BaseModel.
 
         Returns:
-            A loaded pytorch model.
+            A loaded BaseModel.
         """
         super().handle_input(data_type)
-        raise NotImplementedError
+        opt = TrainerConfig.parse_file(
+            os.path.join(self.artifact.uri, MODEL_OPT_DUMP)
+        )
+        model = create_model(opt)
+        model.load_networks("latest")
+        return model
 
     def handle_return(self, model: BaseModel) -> None:
-        """Writes a PyTorch model.
+        """Writes a BaseModel to disk.
 
         Args:
-            model: A torch.nn.Module or a dict to pass into model.save
+            model: A BaseModel instance.
         """
         super().handle_return(model)
-        pass
+        fileio.write_file_contents_as_string(
+            os.path.join(self.artifact.uri, MODEL_OPT_DUMP),
+            model.opt.json()
+        )
+        model.save_networks("latest")

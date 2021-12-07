@@ -68,13 +68,13 @@ class BaseTrainerConfig(BaseConfig):
     print_freq: int = 100
     no_html: bool = True
     save_latest_freq: int = 5000
-    save_epoch_freq: int = 5
+    save_epoch_freq: int = 0
     save_by_iter: bool = True
     continue_train: bool = False
-    epoch_count: int = 1
+    epoch_count: int = 0
     phase: str = "train"
-    n_epochs: int = 100
-    n_epochs_decay: int = 100
+    n_epochs: int = 0
+    n_epochs_decay: int = 0
     beta1: float = 0.5
     lr: float = 0.0002
     gan_mode: str = "lsgan"

@@ -19,8 +19,9 @@ from zenml_src.configs.downloader_config import DownloaderConfig
 from zenml_src.configs.trainer_config import TrainerConfig
 from zenml_src.materializers.dataset_materializer import DatasetMaterializer
 from zenml_src.materializers.model_materializer import ModelMaterializer
-from zenml_src.steps.generate_dataset import generate_dataset
 from zenml_src.steps.download_raw_data import download_raw_data
+from zenml_src.steps.evaluator import evaluator
+from zenml_src.steps.generate_dataset import generate_dataset
 from zenml_src.steps.trainer import train_cycle_gan
 
 logger = get_logger(__name__)
@@ -30,11 +31,13 @@ logger = get_logger(__name__)
 def cyclegan_pipeline(
         download_data_step,
         generate_dataset_step,
-        train_step
+        train_step,
+        evaluator_step,
 ):
     path = download_data_step()
     dataset = generate_dataset_step(dataset_path=path)
-    train_step(dataset=dataset)
+    model = train_step(dataset=dataset)
+    evaluator_step(model=model)
 
 
 if __name__ == "__main__":
@@ -49,5 +52,6 @@ if __name__ == "__main__":
         train_step=train_cycle_gan(
             opt=step_opt
         ).with_return_materializers(ModelMaterializer),
+        evaluator_step=evaluator(),
     )
     p.run()
