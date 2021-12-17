@@ -18,7 +18,7 @@ from data import BaseDataset, create_dataset
 from zenml_src.configs.trainer_config import TrainerConfig
 
 
-@step(enable_cache=False)
+@step
 def generate_dataset(opt: TrainerConfig, dataset_path: str) -> BaseDataset:
     """Generates a dataset"""
     # need to do this to get the rest of the code to work
