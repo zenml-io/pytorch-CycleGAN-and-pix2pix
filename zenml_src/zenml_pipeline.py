@@ -19,8 +19,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from zenml.logger import get_logger
 from zenml.pipelines import pipeline
 
-from zenml_src.configs.downloader_config import DownloaderConfig
-from zenml_src.configs.trainer_config import TrainerConfig
+
 from zenml_src.materializers.dataset_materializer import DatasetMaterializer
 from zenml_src.materializers.model_materializer import ModelMaterializer
 from zenml_src.steps.download_raw_data import download_raw_data
@@ -31,7 +30,7 @@ from zenml_src.steps.trainer import train_cycle_gan
 logger = get_logger(__name__)
 
 
-@pipeline(enable_cache=True)
+@pipeline(enable_cache=True, requirements_file='requirements.txt')
 def cyclegan_pipeline(
         download_data_step,
         generate_dataset_step,
@@ -45,17 +44,11 @@ def cyclegan_pipeline(
 
 
 if __name__ == "__main__":
-    step_opt = TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)
-    download_opt = DownloaderConfig(name="maps")
-
+    # step_opt = TrainerConfig(gpu_ids=[0], n_epochs=20, n_epochs_decay=0)
     p = cyclegan_pipeline(
-        download_data_step=download_raw_data(opt=download_opt),
-        generate_dataset_step=generate_dataset(
-            opt=step_opt
-        ).with_return_materializers(DatasetMaterializer),
-        train_step=train_cycle_gan(
-            opt=step_opt
-        ).with_return_materializers(ModelMaterializer),
+        download_data_step=download_raw_data(),
+        generate_dataset_step=generate_dataset().with_return_materializers(DatasetMaterializer),
+        train_step=train_cycle_gan().with_return_materializers(ModelMaterializer),
         evaluator_step=evaluator(),
-    )
+    ).with_config("zenml_src/configs/zenml_config.yaml")
     p.run()

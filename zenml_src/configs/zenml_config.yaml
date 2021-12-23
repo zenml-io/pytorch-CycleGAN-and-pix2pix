@@ -1,0 +1,16 @@
+steps:
+  download_data_step:
+    parameters:
+      name: maps
+  generate_dataset_step:
+    parameters:
+      gpu_ids:
+          - 0
+      n_epochs: 21
+      n_epochs_decay: 1
+  train_step:
+    parameters:
+      gpu_ids:
+          - 0
+      n_epochs: 21
+      n_epochs_decay: 1
