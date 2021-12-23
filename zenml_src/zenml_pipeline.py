@@ -12,6 +12,10 @@
 #  or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
 
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from zenml.logger import get_logger
 from zenml.pipelines import pipeline
 
@@ -41,7 +45,7 @@ def cyclegan_pipeline(
 
 
 if __name__ == "__main__":
-    step_opt = TrainerConfig(gpu_ids=[], n_epochs=1, n_epochs_decay=0)
+    step_opt = TrainerConfig(gpu_ids=[0], n_epochs=1, n_epochs_decay=0)
     download_opt = DownloaderConfig(name="maps")
 
     p = cyclegan_pipeline(
