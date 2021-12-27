@@ -15,7 +15,7 @@
 import os
 from typing import Any, Type
 
-from zenml.io import fileio
+from zenml.io.utils import write_file_contents_as_string
 from zenml.materializers.base_materializer import BaseMaterializer
 
 from models import create_model
@@ -51,7 +51,7 @@ class ModelMaterializer(BaseMaterializer):
             model: A BaseModel instance.
         """
         super().handle_return(model)
-        fileio.write_file_contents_as_string(
+        write_file_contents_as_string(
             os.path.join(self.artifact.uri, MODEL_OPT_DUMP),
             model.opt.json()
         )
