@@ -15,7 +15,7 @@
 import os
 from typing import Any, Type
 
-from zenml.io.utils import write_file_contents_as_string, file_exists
+from zenml.io.utils import file_exists
 from zenml.materializers.base_materializer import BaseMaterializer
 
 from data import BaseDataset, create_dataset
