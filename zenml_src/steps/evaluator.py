@@ -26,9 +26,9 @@ from zenml_src.configs.test_config import TestConfig
 @step
 def evaluator(
     opt: TestConfig,
-    model: BaseModel,
+    trained_model: BaseModel,
     dataset: BaseDataset,
-) -> int:
+) -> bool:
     opt.num_threads = 0  # test code only supports num_threads = 0
     opt.batch_size = 1  # test code only supports batch_size = 1
     opt.serial_batches = True  # disable data shuffling; comment this line if
@@ -41,7 +41,7 @@ def evaluator(
     # opt.dataset_mode and other options
     # model = create_model(opt)      # create a model given opt.model and
     # other options
-    model.setup(
+    trained_model.setup(
         opt)  # regular setup: load and print networks; create schedulers
 
     # create a website
@@ -58,18 +58,18 @@ def evaluator(
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses
     # instancenorm without dropout.
     if opt.eval:
-        model.eval()
+        trained_model.eval()
     for i, data in enumerate(dataset):
-        if i >= opt.num_test:  # only apply our model to opt.num_test images.
+        if i >= opt.num_test:  # only apply our trained_model to opt.num_test images.
             break
-        model.set_input(data)  # unpack data from data loader
-        model.test()  # run inference
-        visuals = model.get_current_visuals()  # get image results
-        img_path = model.get_image_paths()  # get image paths
+        trained_model.set_input(data)  # unpack data from data loader
+        trained_model.test()  # run inference
+        visuals = trained_model.get_current_visuals()  # get image results
+        img_path = trained_model.get_image_paths()  # get image paths
         if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio,
                     width=opt.display_winsize)
     webpage.save()  # save the HTML
 
-    return 2
+    return True

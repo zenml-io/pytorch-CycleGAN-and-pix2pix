@@ -32,15 +32,15 @@ logger = get_logger(__name__)
 
 @pipeline(enable_cache=True, requirements_file='requirements.txt')
 def cyclegan_pipeline(
-        download_data_step,
-        generate_dataset_step,
-        train_step,
-        evaluator_step,
+    download_data_step,
+    generate_dataset_step,
+    train_step,
+    evaluator_step,
 ):
     path = download_data_step()
     dataset = generate_dataset_step(dataset_path=path)
     model = train_step(dataset=dataset)
-    evaluator_step(dataset=dataset, model=model)
+    evaluator_step(dataset=dataset, trained_model=model)
 
 
 if __name__ == "__main__":
