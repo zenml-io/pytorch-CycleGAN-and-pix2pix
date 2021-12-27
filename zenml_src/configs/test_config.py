@@ -12,10 +12,10 @@
 #  or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
 
-from zenml_src.configs.trainer_config import BaseConfig
+from zenml_src.configs.trainer_config import BaseTrainerConfig
 
 
-class TestConfig(BaseConfig):
+class TestConfig(BaseTrainerConfig):
     results_dir: str = './results/'
     aspect_ratio: float = 1.0
     phase: str = 'test'
