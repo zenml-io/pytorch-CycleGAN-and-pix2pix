@@ -14,3 +14,6 @@ steps:
           - 0
       n_epochs: 21
       n_epochs_decay: 1
+  evaluator:
+    parameters:
+      num_test: 50

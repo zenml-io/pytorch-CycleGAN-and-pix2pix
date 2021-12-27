@@ -40,7 +40,7 @@ def cyclegan_pipeline(
     path = download_data_step()
     dataset = generate_dataset_step(dataset_path=path)
     model = train_step(dataset=dataset)
-    evaluator_step(model=model)
+    evaluator_step(dataset=dataset, model=model)
 
 
 if __name__ == "__main__":
