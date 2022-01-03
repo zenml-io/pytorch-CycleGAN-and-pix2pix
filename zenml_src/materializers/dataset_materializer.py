@@ -15,7 +15,7 @@
 import os
 from typing import Any, Type
 
-from zenml.io.utils import file_exists
+from zenml.io.utils import write_file_contents_as_string
 from zenml.materializers.base_materializer import BaseMaterializer
 
 from data import BaseDataset, create_dataset
@@ -49,7 +49,7 @@ class DatasetMaterializer(BaseMaterializer):
             dataset: A BaseDataset instance.
         """
         super().handle_return(dataset)
-        file_exists(
+        write_file_contents_as_string(
             os.path.join(self.artifact.uri, DATASET_OPT_DUMP),
             dataset.opt.json()
         )
