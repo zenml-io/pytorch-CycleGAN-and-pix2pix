@@ -24,7 +24,7 @@ from models import create_model
 from zenml_src.configs.trainer_config import TrainerConfig
 
 
-@step
+@step(enable_cache=True)
 def train_cycle_gan(
         context: StepContext,
         dataset: BaseDataset,
