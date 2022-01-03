@@ -64,7 +64,8 @@ def evaluator(
             break
         trained_model.set_input(data)  # unpack data from data loader
         trained_model.test()  # run inference
-        visuals = trained_model.get_current_visuals()  # get image results
+        # visuals = trained_model.get_current_visuals()  # get image results
+        visuals = {}
         img_path = trained_model.get_image_paths()  # get image paths
         if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
